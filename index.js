@@ -77,7 +77,7 @@ const client = new Client({
 });
 
 // =====================================================
-// HELPER FUNCTIONS
+// HELPERS
 // =====================================================
 function getDisplayName(member, user) {
   return (
@@ -170,7 +170,7 @@ async function updateInSheets(requestId, status, officer) {
 }
 
 // =====================================================
-// REGISTER /REQUEST COMMAND
+// READY / REGISTER COMMAND
 // =====================================================
 client.once(Events.ClientReady, async () => {
   try {
@@ -209,7 +209,7 @@ client.once(Events.ClientReady, async () => {
 client.on(Events.InteractionCreate, async (interaction) => {
   try {
     // =================================================
-    // /request COMMAND
+    // /request
     // =================================================
     if (
       interaction.isChatInputCommand() &&
@@ -219,7 +219,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
         ephemeral: true,
       });
 
-      // Use member already attached to the interaction.
       const member = interaction.member;
 
       const displayName = getDisplayName(
@@ -227,6 +226,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         interaction.user
       );
 
+      // Public message in member request channel.
       const publicEmbed = new EmbedBuilder()
         .setTitle("📦 Item Request")
         .setDescription(
@@ -238,6 +238,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         embeds: [publicEmbed],
       });
 
+      // Private dropdown.
       const requestEmbed = new EmbedBuilder()
         .setTitle("📦 Item Request")
         .setDescription(
@@ -305,7 +306,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
       await interaction.deferUpdate();
 
-      // Use member already attached to the interaction.
       const member = interaction.member;
 
       const displayName = getDisplayName(
@@ -328,6 +328,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         );
       }
 
+      // Private confirmation.
       const confirmationEmbed = new EmbedBuilder()
         .setTitle("✅ Request Submitted")
         .setDescription(
@@ -366,7 +367,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       });
 
       // =================================================
-      // OFFICER APPROVAL MESSAGE
+      // OFFICER CHANNEL
       // =================================================
       const officerChannel =
         await interaction.guild.channels.fetch(
@@ -433,7 +434,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
 
     // =================================================
-    // DELIVERED / DENIED BUTTONS
+    // DELIVERED / DENIED
     // =================================================
     if (interaction.isButton()) {
       const [action, requestId] =
@@ -446,8 +447,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
         return;
       }
 
-      // For officer buttons we keep a real GuildMember fetch
-      // because role information is important here.
       const officerMember =
         await interaction.guild.members.fetch(
           interaction.user.id
@@ -481,7 +480,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
         officerName
       );
 
-      // Remove approval message after successful Sheet update.
+      // Remove approval message after successful update.
       await interaction.message.delete();
 
       return;
@@ -506,7 +505,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
       }
     } catch (replyError) {
       console.error(
-        "Failed sending the error response:",
+        "Failed sending error response:",
         replyError
       );
     }
@@ -514,6 +513,49 @@ client.on(Events.InteractionCreate, async (interaction) => {
 });
 
 // =====================================================
-// LOGIN
+// LOGIN WITH AUTOMATIC RETRY
 // =====================================================
-client.login(BOT_TOKEN);
+const LOGIN_RETRY_DELAY_MS = 30000;
+
+let loginRetryTimer = null;
+let loginInProgress = false;
+
+async function loginWithRetry() {
+  if (loginInProgress) {
+    return;
+  }
+
+  loginInProgress = true;
+
+  try {
+    console.log("Attempting Discord login...");
+
+    await client.login(BOT_TOKEN);
+
+    console.log("Discord login successful.");
+
+    if (loginRetryTimer) {
+      clearTimeout(loginRetryTimer);
+      loginRetryTimer = null;
+    }
+  } catch (error) {
+    console.error("Discord login failed:", error);
+
+    console.log(
+      `Retrying Discord login in ${
+        LOGIN_RETRY_DELAY_MS / 1000
+      } seconds...`
+    );
+
+    loginRetryTimer = setTimeout(() => {
+      loginInProgress = false;
+      loginWithRetry();
+    }, LOGIN_RETRY_DELAY_MS);
+
+    return;
+  }
+
+  loginInProgress = false;
+}
+
+loginWithRetry();
