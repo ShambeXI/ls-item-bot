@@ -63,6 +63,7 @@ const ITEMS = [
   "Zahak's Mail",
   "Herald's Gaiters",
   "Avalon Breastplate",
+  "Mercurial Pole",
 ];
 
 // =====================================================
