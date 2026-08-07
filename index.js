@@ -219,16 +219,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
         ephemeral: true,
       });
 
-      const member = await interaction.guild.members.fetch(
-        interaction.user.id
-      );
+      // Use member already attached to the interaction.
+      const member = interaction.member;
 
       const displayName = getDisplayName(
         member,
         interaction.user
       );
 
-      // Public message showing a member started a request.
       const publicEmbed = new EmbedBuilder()
         .setTitle("📦 Item Request")
         .setDescription(
@@ -240,7 +238,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
         embeds: [publicEmbed],
       });
 
-      // Private dropdown visible only to requester.
       const requestEmbed = new EmbedBuilder()
         .setTitle("📦 Item Request")
         .setDescription(
@@ -308,9 +305,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
       await interaction.deferUpdate();
 
-      const member = await interaction.guild.members.fetch(
-        interaction.user.id
-      );
+      // Use member already attached to the interaction.
+      const member = interaction.member;
 
       const displayName = getDisplayName(
         member,
@@ -332,7 +328,6 @@ client.on(Events.InteractionCreate, async (interaction) => {
         );
       }
 
-      // Private confirmation.
       const confirmationEmbed = new EmbedBuilder()
         .setTitle("✅ Request Submitted")
         .setDescription(
@@ -451,6 +446,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
         return;
       }
 
+      // For officer buttons we keep a real GuildMember fetch
+      // because role information is important here.
       const officerMember =
         await interaction.guild.members.fetch(
           interaction.user.id
@@ -477,14 +474,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
           ? "Delivered"
           : "Denied";
 
-      // Google Sheets updates first.
+      // Update Google Sheets first.
       await updateInSheets(
         requestId,
         newStatus,
         officerName
       );
 
-      // Then remove the approval message from Discord.
+      // Remove approval message after successful Sheet update.
       await interaction.message.delete();
 
       return;
