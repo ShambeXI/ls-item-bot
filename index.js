@@ -64,6 +64,7 @@ const ITEMS = [
   "Herald's Gaiters",
   "Avalon Breastplate",
   "Mercurial Pole",
+  "Hauteclaire",
 ];
 
 // =====================================================
