@@ -65,6 +65,7 @@ const ITEMS = [
   "Avalon Breastplate",
   "Mercurial Pole",
   "Hauteclaire",
+  "Danzo Sune-ate",
 ];
 
 // =====================================================
