@@ -65,7 +65,9 @@ const ITEMS = [
   "Avalon Breastplate",
   "Mercurial Pole",
   "Hauteclaire",
-  "Mythic",
+  "Gurfurlur's Helmet",
+  "Medusa's Armlet",
+  "Ja Ja's Chestplate",
 ];
 
 // =====================================================
